@@ -6,23 +6,21 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2022 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
-  * This software component is licensed by ST under Ultimate Liberty license
-  * SLA0044, the "License"; You may not use this file except in compliance with
-  * the License. You may obtain a copy of the License at:
-  *                             www.st.com/SLA0044
+  * This software component is licensed by ST under BSD 3-Clause license,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/BSD-3-Clause
   *
   ******************************************************************************
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include <stdio.h>
-#include "acm_GO422.h"
-//#include "GopherCAN.h"
 #include "main.h"
 #include "cmsis_os.h"
+#include "acm_GO422.c"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -44,11 +42,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-ADC_HandleTypeDef hadc1;
-
 CAN_HandleTypeDef hcan1;
-
-SMBUS_HandleTypeDef hsmbus1;
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim8;
@@ -65,8 +59,6 @@ static void MX_GPIO_Init(void);
 static void MX_CAN1_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM8_Init(void);
-static void MX_ADC1_Init(void);
-static void MX_I2C1_SMBUS_Init(void);
 void task_main_loop(void const * argument);
 void task_gcan_hw(void const * argument);
 
@@ -110,9 +102,9 @@ int main(void)
   MX_CAN1_Init();
   MX_TIM1_Init();
   MX_TIM8_Init();
-  MX_ADC1_Init();
-  MX_I2C1_SMBUS_Init();
   /* USER CODE BEGIN 2 */
+
+  init(&hcan1);
 
   /* USER CODE END 2 */
 
@@ -154,7 +146,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+	  main_loop();
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -168,7 +160,6 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
   /** Configure the main internal regulator output voltage
   */
@@ -178,7 +169,7 @@ void SystemClock_Config(void)
   * in the RCC_OscInitTypeDef structure.
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 12;
@@ -208,62 +199,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
-  PeriphClkInitStruct.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
-}
-
-/**
-  * @brief ADC1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_ADC1_Init(void)
-{
-
-  /* USER CODE BEGIN ADC1_Init 0 */
-
-  /* USER CODE END ADC1_Init 0 */
-
-  ADC_ChannelConfTypeDef sConfig = {0};
-
-  /* USER CODE BEGIN ADC1_Init 1 */
-
-  /* USER CODE END ADC1_Init 1 */
-  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
-  */
-  hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
-  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
-  hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
-  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-  if (HAL_ADC_Init(&hadc1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
-  */
-  sConfig.Channel = ADC_CHANNEL_6;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN ADC1_Init 2 */
-
-  /* USER CODE END ADC1_Init 2 */
-
 }
 
 /**
@@ -300,50 +235,6 @@ static void MX_CAN1_Init(void)
   /* USER CODE BEGIN CAN1_Init 2 */
 
   /* USER CODE END CAN1_Init 2 */
-
-}
-
-/**
-  * @brief I2C1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_I2C1_SMBUS_Init(void)
-{
-
-  /* USER CODE BEGIN I2C1_Init 0 */
-
-  /* USER CODE END I2C1_Init 0 */
-
-  /* USER CODE BEGIN I2C1_Init 1 */
-
-  /* USER CODE END I2C1_Init 1 */
-  hsmbus1.Instance = I2C1;
-  hsmbus1.Init.Timing = 0x00C0EAFF;
-  hsmbus1.Init.AnalogFilter = SMBUS_ANALOGFILTER_ENABLE;
-  hsmbus1.Init.OwnAddress1 = 2;
-  hsmbus1.Init.AddressingMode = SMBUS_ADDRESSINGMODE_7BIT;
-  hsmbus1.Init.DualAddressMode = SMBUS_DUALADDRESS_DISABLE;
-  hsmbus1.Init.OwnAddress2 = 0;
-  hsmbus1.Init.OwnAddress2Masks = SMBUS_OA2_NOMASK;
-  hsmbus1.Init.GeneralCallMode = SMBUS_GENERALCALL_DISABLE;
-  hsmbus1.Init.NoStretchMode = SMBUS_NOSTRETCH_DISABLE;
-  hsmbus1.Init.PacketErrorCheckMode = SMBUS_PEC_DISABLE;
-  hsmbus1.Init.PeripheralMode = SMBUS_PERIPHERAL_MODE_SMBUS_SLAVE;
-  hsmbus1.Init.SMBusTimeout = 0x00008262;
-  if (HAL_SMBUS_Init(&hsmbus1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** configuration Alert Mode
-  */
-  if (HAL_SMBUS_EnableAlert_IT(&hsmbus1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN I2C1_Init 2 */
-
-  /* USER CODE END I2C1_Init 2 */
 
 }
 
@@ -410,6 +301,10 @@ static void MX_TIM1_Init(void)
     Error_Handler();
   }
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
   {
     Error_Handler();
   }
@@ -535,6 +430,9 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOF, LEFT_ENABLE_Pin|RIGHT_ENABLE_Pin|DRS_ENABLE_1_Pin|DRS_ENABLE_2_Pin, GPIO_PIN_SET);
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GRN_LED_GPIO_Port, GRN_LED_Pin, GPIO_PIN_RESET);
+
   /*Configure GPIO pin : BUTTON_Pin */
   GPIO_InitStruct.Pin = BUTTON_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -548,11 +446,20 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : STATUS_1_Pin STATUS_2_Pin */
-  GPIO_InitStruct.Pin = STATUS_1_Pin|STATUS_2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  /*Configure GPIO pin : PA0 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : GRN_LED_Pin */
+  GPIO_InitStruct.Pin = GRN_LED_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GRN_LED_GPIO_Port, &GPIO_InitStruct);
 
 }
 
@@ -566,21 +473,16 @@ static void MX_GPIO_Init(void)
   * @param  argument: Not used
   * @retval None
   */
-
 /* USER CODE END Header_task_main_loop */
 void task_main_loop(void const * argument)
 {
   /* USER CODE BEGIN 5 */
-	  TIM2->CCR1 = 1500; //stall setting, current default for high downforce for this current iteration
-	  TIM2->CCR2 = 1500;
-	  TIM2->CCR3 = 1500;
-	  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-	  init(&hcan1);
   /* Infinite loop */
-	  for(;;)
-	  {
-		  osDelay(1);
-	  }
+  for(;;)
+  {
+	  main_loop();
+    osDelay(10);
+  }
   /* USER CODE END 5 */
 }
 
@@ -593,100 +495,14 @@ void task_main_loop(void const * argument)
 /* USER CODE END Header_task_gcan_hw */
 void task_gcan_hw(void const * argument)
 {
-	  /* USER CODE BEGIN 1 */
-
-	  /* USER CODE END 1 */
-
-	  /* MCU Configuration--------------------------------------------------------*/
-
-	  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-	  HAL_Init();
-
-	  /* USER CODE BEGIN Init */
-
-	  /* USER CODE END Init */
-
-	  /* Configure the system clock */
-	  SystemClock_Config();
-
-	  /* USER CODE BEGIN SysInit */
-
-	  /* USER CODE END SysInit */
-
-	  /* Initialize all configured peripherals */
-	  MX_GPIO_Init();
-	  MX_CAN1_Init();
-	  MX_TIM1_Init();
-	  MX_TIM8_Init();
-	  /* USER CODE BEGIN 2 */
-	  TIM2->CCR1 = 1500; //stall setting, current default for high downforce for this current iteration
-	  TIM2->CCR2 = 1500;
-	  TIM2->CCR3 = 1500;
-	  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-	  init(&hcan1);
-
-	  /* USER CODE END 2 */
-
-	  /* USER CODE BEGIN RTOS_MUTEX */
-	  /* add mutexes, ... */
-	  /* USER CODE END RTOS_MUTEX */
-
-	  /* USER CODE BEGIN RTOS_SEMAPHORES */
-	  /* add semaphores, ... */
-	  /* USER CODE END RTOS_SEMAPHORES */
-
-	  /* USER CODE BEGIN RTOS_TIMERS */
-	  /* start timers, add new ones, ... */
-	  /* USER CODE END RTOS_TIMERS */
-
-	  /* USER CODE BEGIN RTOS_QUEUES */
-	  /* add queues, ... */
-	  /* USER CODE END RTOS_QUEUES */
-
-	  /* Create the thread(s) */
-	  /* definition and creation of taskMain_Loop */
-	  osThreadDef(taskMain_Loop, task_main_loop, osPriorityNormal, 0, 256);
-	  taskMain_LoopHandle = osThreadCreate(osThread(taskMain_Loop), NULL);
-
-	  /* definition and creation of taskGCAN_Hardwa */
-	  osThreadDef(taskGCAN_Hardwa, task_gcan_hw, osPriorityNormal, 0, 256);
-	  taskGCAN_HardwaHandle = osThreadCreate(osThread(taskGCAN_Hardwa), NULL);
-
-	  /* USER CODE BEGIN RTOS_THREADS */
-	  /* add threads, ... */
-	  /* USER CODE END RTOS_THREADS */
-
-	  /* Start scheduler */
-	  osKernelStart();
-
-	  /* We should never get here as control is now taken by the scheduler */
-	  /* Infinite loop */
-	  /* USER CODE BEGIN WHILE */
-
-	  // local error angles
-	  U8 local_err_drs = 50;
-	  U8 local_err_active_aero = 30;
-	  U8 local_drs_state = 0;
-	  U8 local_active_aero_state = 0;
-
-	  while (1) // need to decide between having high level functions in another file or not, rn it isn't
-	  {
-	    /* USER CODE END WHILE */
-		  U8 local_valid_channel = valid_data_channel(DATA_CHANNEL_1);
-		  parameter_request_channel_1();
-		  if(local_valid_channel == 1)
-		  {
-		  	local_drs_state = calculate_rear_wing_angle(DATA_CHANNEL_1);
-		  	local_active_aero_state = calculate_front_wing_angle(DATA_CHANNEL_1);
-		  }
-		  else
-		  {
-		  	local_drs_state = local_err_drs;
-		  	local_active_aero_state = local_err_active_aero;
-		  }
-		  PWM_generation(local_drs_state, local_active_aero_state);
-	    /* USER CODE BEGIN 3 */
-	  }
+  /* USER CODE BEGIN task_gcan_hw */
+  /* Infinite loop */
+  for(;;)
+  {
+	  can_buffer_handling_loop();
+    osDelay(1);
+  }
+  /* USER CODE END task_gcan_hw */
 }
 
  /**

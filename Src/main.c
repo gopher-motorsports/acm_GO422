@@ -571,9 +571,9 @@ static void MX_GPIO_Init(void)
 void task_main_loop(void const * argument)
 {
   /* USER CODE BEGIN 5 */
-	  TIM1->CCR1 = 1500; //stall setting, current default for high downforce for this current iteration
-	  TIM1->CCR2 = 1500;
-	  TIM1->CCR3 = 1500;
+	  TIM2->CCR1 = 1500; //stall setting, current default for high downforce for this current iteration
+	  TIM2->CCR2 = 1500;
+	  TIM2->CCR3 = 1500;
 	  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 	  init(&hcan1);
   /* Infinite loop */
@@ -619,9 +619,9 @@ void task_gcan_hw(void const * argument)
 	  MX_TIM1_Init();
 	  MX_TIM8_Init();
 	  /* USER CODE BEGIN 2 */
-	  TIM1->CCR1 = 1500; //stall setting, current default for high downforce for this current iteration
-	  TIM1->CCR2 = 1500;
-	  TIM1->CCR3 = 1500;
+	  TIM2->CCR1 = 1500; //stall setting, current default for high downforce for this current iteration
+	  TIM2->CCR2 = 1500;
+	  TIM2->CCR3 = 1500;
 	  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 	  init(&hcan1);
 

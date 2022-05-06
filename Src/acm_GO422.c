@@ -6,6 +6,7 @@
 // set up enables for each power supply (automatically set to on, turn off if power strays from usable range)
 
 // the HAL_CAN struct. This example only works for a single CAN bus
+// test comment
 CAN_HandleTypeDef* acm_hcan;
 
 // Use this to define what module this board and other boards will be
